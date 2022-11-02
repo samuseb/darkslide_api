@@ -15,8 +15,34 @@ struct UserController: RouteCollection {
     }
 
     // GET /users
+    // optional query params: search
     func getAll(req: Request) throws -> EventLoopFuture<[User]> {
-        return User.query(on: req.db).all()
+        let search = try req.query.decode(Search.self)
+        let paging = try req.query.decode(Paging.self)
+        if let search = search.search {
+            if let page = paging.page, let limit = paging.limit {
+                let range = ((page - 1) * limit) ..< (((page - 1) * limit) + limit)
+                return User.query(on: req.db)
+                    .filter(\.$userName, .custom("ilike"), "%\(search)%")
+                    .sort(\.$userName)
+                    .range(range)
+                    .all()
+            } else {
+                return User.query(on: req.db)
+                    .filter(\.$userName, .custom("ilike"), "%\(search)%")
+                    .all()
+            }
+        } else {
+            if let page = paging.page, let limit = paging.limit {
+                let range = ((page - 1) * limit) ..< (((page - 1) * limit) + limit)
+                return User.query(on: req.db)
+                    .sort(\.$userName)
+                    .range(range)
+                    .all()
+            } else {
+                return User.query(on: req.db).all()
+            }
+        }
     }
 
     // GET /users/:userUID
