@@ -17,6 +17,9 @@ struct PostController: RouteCollection {
                 post2.get(use: getUserPostCount)
             }
         }
+        posts.group("search") { post in
+            post.get(use: search)
+        }
     }
 
     // GET /posts
@@ -92,5 +95,32 @@ struct PostController: RouteCollection {
             .filter(\.$userUID == userUID)
             .count()
         return Count(value: count)
+    }
+
+    // GET /posts/search
+    // query params
+    func search(req: Request) async throws -> [Post] {
+        let paging = try req.query.decode(Paging.self)
+        let searchFields = try req.query.decode(PostSearchFields.self)
+
+        var result = Post.query(on: req.db)
+            .sort(\.$timeStamp)
+        if let page = paging.page, let limit = paging.limit {
+            let range = ((page - 1) * limit) ..< (((page - 1) * limit) + limit)
+            result = result.range(range)
+        }
+        if let camera = searchFields.camera {
+            result = result.filter(\.$camera, .custom("ilike"), "%\(camera)%")
+        }
+        if let lens = searchFields.lens {
+            result = result.filter(\.$lens, .custom("ilike"), "%\(lens)%")
+        }
+        if let description = searchFields.description {
+            result = result.filter(\.$description, .custom("ilike"), "%\(description)%")
+        }
+        if let filmStock = searchFields.filmStock {
+            result = result.filter(\.$filmStock, .custom("ilike"), "%\(filmStock)%")
+        }
+        return try await result.all()
     }
 }

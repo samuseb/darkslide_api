@@ -4,7 +4,7 @@ import Vapor
 struct FollowController: RouteCollection {
     func boot(routes: Vapor.RoutesBuilder) throws {
         let follows = routes.grouped("follows")
-        follows.get(use: getAll)
+        follows.get(use: getFollows)
         follows.post(use: create)
         follows.delete(use: deleteByUIDs)
         follows.group(":followID") { follow in
@@ -18,8 +18,21 @@ struct FollowController: RouteCollection {
     }
 
     // GET /follows
-    func getAll(req: Request) throws -> EventLoopFuture<[Follow]> {
-        return Follow.query(on: req.db).all()
+    // optional query params: followed, follower (if both exists, return it)
+    func getFollows(req: Request) throws -> EventLoopFuture<[Follow]> {
+        let followUIDs = try req.query.decode(FollowUIDs.self)
+        let follower = followUIDs.follower
+        let followed = followUIDs.followed
+
+        if let follower = follower, let followed = followed {
+            return Follow.query(on: req.db)
+                .filter(\.$followerUID == follower)
+                .filter(\.$followedUID == followed)
+                .all()
+        } else {
+            return Follow.query(on: req.db)
+                .all()
+        }
     }
 
     // POST /follows
@@ -69,5 +82,4 @@ struct FollowController: RouteCollection {
             .count()
         return Count(value: count)
     }
-
 }
