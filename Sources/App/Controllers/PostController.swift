@@ -16,6 +16,10 @@ struct PostController: RouteCollection {
             post.group("count") { post2 in
                 post2.get(use: getUserPostCount)
             }
+
+            post.group("feed") { post2 in
+                post2.get(use: getFeed)
+            }
         }
         posts.group("search") { post in
             post.get(use: search)
@@ -36,7 +40,7 @@ struct PostController: RouteCollection {
             let range = ((page - 1) * limit) ..< (((page - 1) * limit) + limit)
             return Post.query(on: req.db)
                 .filter(\.$userUID == userUID)
-                .sort(\.$timeStamp)
+                .sort(\.$timeStamp, .descending)
                 .range(range)
                 .all()
         } else {
@@ -122,5 +126,31 @@ struct PostController: RouteCollection {
             result = result.filter(\.$filmStock, .custom("ilike"), "%\(filmStock)%")
         }
         return try await result.all()
+    }
+
+
+    // GET /posts/:useruid/feed
+    // query params: page, limit
+    func getFeed(req: Request) async throws -> [Post] {
+        guard let userUID = req.parameters.get("userUID") else { return [] }
+        let paging = try req.query.decode(Paging.self)
+        guard let page = paging.page, let limit = paging.limit else { return [] }
+        let range = ((page - 1) * limit) ..< (((page - 1) * limit) + limit)
+
+        let follows = try await Follow
+            .query(on: req.db)
+            .filter(\.$followerUID == userUID)
+            .all()
+        var followedUIDs = [String]()
+        follows.forEach { follow in
+            followedUIDs.append(follow.followedUID)
+        }
+
+        return try await Post
+            .query(on: req.db)
+            .filter(\.$userUID ~~ followedUIDs)
+            .sort(\.$timeStamp, .descending)
+            .range(range)
+            .all()
     }
 }
