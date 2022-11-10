@@ -18,6 +18,7 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreatePosts())
     app.migrations.add(CreateFollows())
     app.migrations.add(CreateUsers())
+    app.migrations.add(CreateComments())
     try app.autoMigrate().wait()
 
     // register routes
