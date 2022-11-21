@@ -7,6 +7,7 @@ struct CreateUsers: Migration {
             .field("userUID", .string, .required)
             .field("userName", .string, .required)
             .field("coverPhotoData", .data)
+            .field("profilePhotoData", .data)
             .field("bioDescription", .string)
             .create()
     }

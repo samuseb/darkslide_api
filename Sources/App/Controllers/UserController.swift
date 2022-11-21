@@ -12,6 +12,12 @@ struct UserController: RouteCollection {
             user.get(use: getByUserUID)
             user.delete(use: delete)
         }
+
+        users.group("exists") { user in
+            user.group(":username") { user2 in
+                user2.get(use: exists)
+            }
+        }
     }
 
     // GET /users
@@ -69,6 +75,7 @@ struct UserController: RouteCollection {
                 $0.userName = user.userName
                 $0.coverPhotoData = user.coverPhotoData
                 $0.bioDescription = user.bioDescription
+                $0.profilePhotoData = user.profilePhotoData
                 return $0.update(on: req.db).transform(to: .ok)
             }
     }
@@ -80,5 +87,13 @@ struct UserController: RouteCollection {
             .filter(\.$userUID == UID)
             .delete()
             .transform(to: .ok)
+    }
+
+    func exists(req: Request) async throws -> Exists {
+        let username = req.parameters.get("username") ?? ""
+        let count = try await User.query(on: req.db)
+            .filter(\.$userName, .custom("ilike"), username)
+            .count()
+        return Exists(value: count > 0)
     }
 }

@@ -6,7 +6,6 @@ struct CreateFollows: Migration {
             .id()
             .field("followerUID", .string, .required)
             .field("followedUID", .string, .required)
-            .field("timeStamp", .datetime, .required)
             .create()
     }
 

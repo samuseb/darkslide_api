@@ -6,6 +6,7 @@ struct CreateComments: Migration {
             .id()
             .field("postID", .string, .required)
             .field("userUID", .string, .required)
+            .field("userName", .string, .required)
             .field("text", .string, .required)
             .field("timeStamp", .datetime, .required)
             .create()

@@ -16,6 +16,9 @@ final class User: Model, Content {
     @OptionalField(key: "coverPhotoData")
     var coverPhotoData: Data?
 
+    @OptionalField(key: "profilePhotoData")
+    var profilePhotoData: Data?
+
     @OptionalField(key: "bioDescription")
     var bioDescription: String?
 
@@ -26,12 +29,14 @@ final class User: Model, Content {
         userUID: String,
         userName: String,
         coverPhotoData: Data? = nil,
+        profilePhotoData: Data? = nil,
         bioDescription: String? = nil
     ) {
         self.id = id
         self.userUID = userUID
         self.userName = userName
         self.coverPhotoData = coverPhotoData
+        self.profilePhotoData = profilePhotoData
         self.bioDescription = bioDescription
     }
 }

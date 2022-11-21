@@ -16,6 +16,9 @@ final class Comment: Model, Content {
     @Field(key: "userUID")
     var userUID: String
 
+    @Field(key: "userName")
+    var userName: String
+
     @Field(key: "timeStamp")
     var timeStamp: Date
 
@@ -25,11 +28,13 @@ final class Comment: Model, Content {
         id: UUID? = nil,
         postID: String,
         userUID: String,
+        userName: String,
         timeStamp: Date
     ) {
         self.id = id
         self.postID = postID
         self.userUID = userUID
+        self.userName = userName
         self.timeStamp = timeStamp
     }
 }
