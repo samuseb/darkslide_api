@@ -15,6 +15,11 @@ struct FollowController: RouteCollection {
                 follow2.get(use: getUserFollowerCount)
             }
         }
+        follows.group("deleteuser") { follow in
+            follow.group(":userUID") { follow2 in
+                follow2.delete(use: deleteUserFollows)
+            }
+        }
     }
 
     // GET /follows
@@ -74,12 +79,27 @@ struct FollowController: RouteCollection {
             .transform(to: .ok)
     }
 
-    // GET /dollows/followedUID/count
+    // GET /follows/followedUID/count
     func getUserFollowerCount(req: Request) async throws -> Count {
         let userUID = req.parameters.get("followedUID") ?? ""
         let count = try await Follow.query(on: req.db)
             .filter(\.$followedUID == userUID)
             .count()
         return Count(value: count)
+    }
+
+    // DELETE /deleteuser/:userUID
+    func deleteUserFollows(req: Request) -> EventLoopFuture<HTTPStatus>{
+        let userUID = req.parameters.get("userUID") ?? ""
+        return Follow
+            .query(on: req.db)
+            .group(.or) { group in
+                group.filter(\.$followerUID == userUID).filter(\.$followedUID == userUID)
+            }
+            .all()
+            .flatMap {
+                $0.delete(on: req.db)
+            }
+            .transform(to: .ok)
     }
 }

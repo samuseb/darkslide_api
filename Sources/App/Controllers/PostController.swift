@@ -10,6 +10,13 @@ struct PostController: RouteCollection {
         posts.group(":postID") { post in
             post.delete(use: delete)
         }
+
+        posts.group("deleteuser") { post in
+            post.group(":userUID") { post2 in
+                post2.delete(use: deleteUserPosts)
+            }
+        }
+
         posts.group(":userUID") { post in
             post.get(use: getUserPosts)
 
@@ -113,16 +120,16 @@ struct PostController: RouteCollection {
             let range = ((page - 1) * limit) ..< (((page - 1) * limit) + limit)
             result = result.range(range)
         }
-        if let camera = searchFields.camera {
+        if let camera = searchFields.camera?.replacingOccurrences(of: "+", with: " ") {
             result = result.filter(\.$camera, .custom("ilike"), "%\(camera)%")
         }
-        if let lens = searchFields.lens {
+        if let lens = searchFields.lens?.replacingOccurrences(of: "+", with: " ") {
             result = result.filter(\.$lens, .custom("ilike"), "%\(lens)%")
         }
-        if let description = searchFields.description {
+        if let description = searchFields.description?.replacingOccurrences(of: "+", with: " ") {
             result = result.filter(\.$description, .custom("ilike"), "%\(description)%")
         }
-        if let filmStock = searchFields.filmStock {
+        if let filmStock = searchFields.filmStock?.replacingOccurrences(of: "+", with: " ") {
             result = result.filter(\.$filmStock, .custom("ilike"), "%\(filmStock)%")
         }
         return try await result.all()
@@ -153,4 +160,18 @@ struct PostController: RouteCollection {
             .range(range)
             .all()
     }
+
+    //DELETE /posts/deleteuser/:userUID
+    func deleteUserPosts(req: Request) throws -> EventLoopFuture<HTTPStatus> {
+        let userUID = req.parameters.get("userUID") ?? ""
+        return Post
+            .query(on: req.db)
+            .filter(\.$userUID == userUID)
+            .all()
+            .flatMap {
+                $0.delete(on: req.db)
+            }
+            .transform(to: .ok)
+    }
+
 }

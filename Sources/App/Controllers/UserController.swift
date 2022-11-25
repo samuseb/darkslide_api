@@ -1,4 +1,5 @@
 import Fluent
+import Foundation
 import Vapor
 
 struct UserController: RouteCollection {
@@ -11,6 +12,10 @@ struct UserController: RouteCollection {
         users.group(":userUID") { user in
             user.get(use: getByUserUID)
             user.delete(use: delete)
+
+            user.group("username") { user2 in
+                user2.get(use: getUserName)
+            }
         }
 
         users.group("exists") { user in
@@ -95,5 +100,17 @@ struct UserController: RouteCollection {
             .filter(\.$userName, .custom("ilike"), username)
             .count()
         return Exists(value: count > 0)
+    }
+
+    func getUserName(req: Request) async throws -> Username {
+        let UID = req.parameters.get("userUID") ?? ""
+        let user = try await User.query(on: req.db)
+            .filter(\.$userUID == UID)
+            .first()
+        if let user = user {
+            return Username(value: user.userName)
+        } else {
+            throw Abort(.notFound)
+        }
     }
 }

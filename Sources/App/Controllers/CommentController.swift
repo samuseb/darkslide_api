@@ -14,6 +14,12 @@ struct CommentController: RouteCollection {
         comments.group(":postID") { comment in
             comment.get(use: getPostComments)
         }
+
+        comments.group("deleteuser") { comment in
+            comment.group(":userUID") { comment2 in
+                comment2.delete(use: deleteUserComments)
+            }
+        }
     }
 
     // GET /comments
@@ -67,6 +73,19 @@ struct CommentController: RouteCollection {
     func delete(req: Request) throws -> EventLoopFuture<HTTPStatus> {
         Comment.find(req.parameters.get("commentID"), on: req.db)
             .unwrap(or: Abort(.notFound))
+            .flatMap {
+                $0.delete(on: req.db)
+            }
+            .transform(to: .ok)
+    }
+
+    // DELETE /comments/deleteuser/:userUID
+    func deleteUserComments(req: Request) throws -> EventLoopFuture<HTTPStatus> {
+        let userUID = req.parameters.get("userUID") ?? ""
+        return Comment
+            .query(on: req.db)
+            .filter(\.$userUID == userUID)
+            .all()
             .flatMap {
                 $0.delete(on: req.db)
             }
