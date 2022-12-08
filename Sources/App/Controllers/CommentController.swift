@@ -16,8 +16,8 @@ struct CommentController: RouteCollection {
         }
 
         comments.group("deleteuser") { comment in
-            comment.group(":userUID") { comment2 in
-                comment2.delete(use: deleteUserComments)
+            comment.group(":userUID") { userComment in
+                userComment.delete(use: deleteUserComments)
             }
         }
     }

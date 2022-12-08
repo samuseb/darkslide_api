@@ -116,10 +116,6 @@ struct PostController: RouteCollection {
 
         var result = Post.query(on: req.db)
             .sort(\.$timeStamp)
-        if let page = paging.page, let limit = paging.limit {
-            let range = ((page - 1) * limit) ..< (((page - 1) * limit) + limit)
-            result = result.range(range)
-        }
         if let camera = searchFields.camera?.replacingOccurrences(of: "+", with: " ") {
             result = result.filter(\.$camera, .custom("ilike"), "%\(camera)%")
         }
@@ -131,6 +127,10 @@ struct PostController: RouteCollection {
         }
         if let filmStock = searchFields.filmStock?.replacingOccurrences(of: "+", with: " ") {
             result = result.filter(\.$filmStock, .custom("ilike"), "%\(filmStock)%")
+        }
+        if let page = paging.page, let limit = paging.limit {
+            let range = ((page - 1) * limit) ..< (((page - 1) * limit) + limit)
+            result = result.range(range)
         }
         return try await result.all()
     }

@@ -88,7 +88,7 @@ struct FollowController: RouteCollection {
         return Count(value: count)
     }
 
-    // DELETE /deleteuser/:userUID
+    // DELETE /follows/deleteuser/:userUID
     func deleteUserFollows(req: Request) -> EventLoopFuture<HTTPStatus>{
         let userUID = req.parameters.get("userUID") ?? ""
         return Follow

@@ -94,6 +94,7 @@ struct UserController: RouteCollection {
             .transform(to: .ok)
     }
 
+    // GET /users/:username
     func exists(req: Request) async throws -> Exists {
         let username = req.parameters.get("username") ?? ""
         let count = try await User.query(on: req.db)
@@ -102,6 +103,7 @@ struct UserController: RouteCollection {
         return Exists(value: count > 0)
     }
 
+    // GET /users/:userUID/username
     func getUserName(req: Request) async throws -> Username {
         let UID = req.parameters.get("userUID") ?? ""
         let user = try await User.query(on: req.db)
